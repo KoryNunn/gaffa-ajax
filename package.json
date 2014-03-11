@@ -1,7 +1,7 @@
 {
   "name": "gaffa-ajax",
   "author": "Kory Nunn <knunn187@gmail.com>",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "ajax.js",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
     "ajax"
   ],
   "peerDependencies":{
-    "gaffa":"^0.21.x"
+    "gaffa":"^1.0.0"
   },
   "license": "MIT"
 }
