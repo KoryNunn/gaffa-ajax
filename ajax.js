@@ -10,14 +10,28 @@ Ajax.prototype.method = new Gaffa.Property({
 });
 Ajax.prototype.auth = new Gaffa.Property();
 Ajax.prototype.dataType = 'json';
+Ajax.prototype.cors = new Gaffa.Property();
 Ajax.prototype.trigger = function(parent, scope, event){
-    this.__super__.trigger.apply(this, arguments);
 
     var action = this,
         gaffa = this.gaffa,
         data = action.source.value,
-        errorHandler = function (error, data) {
-            scope.data = data;
+        errorHandler = function (xhrEvent, error) {
+            action.errors.set(error);
+
+            scope.data = error;
+
+            // EventEmitter will throw an error if you emit an error
+            // and have no handler attached to handle it.
+            // this event is only here as a convenience, not as the
+            // primary means of handling errors.
+            if(action._events.error){
+                action.emit('error', {
+                    domEvent: event,
+                    scope: scope,
+                    error: error
+                });
+            }
             action.triggerActions('error', scope, event);
             gaffa.notifications.notify("ajax.error." + action.kind, error);
         };
@@ -37,8 +51,10 @@ Ajax.prototype.trigger = function(parent, scope, event){
     scope = scope || {};
 
     var ajaxSettings = {
+        cors: action.cors.value,
         cache: action.cache,
         type: action.method.value,
+        headers: action.headers.value,
         url: action.url.value || window.location.pathname,
         data: data,
         dataType: action.dataType,
@@ -50,14 +66,18 @@ Ajax.prototype.trigger = function(parent, scope, event){
                 return;
             }
 
-            action.target.set(data);
-
-            // Mark a portion of the model as clean after a successful request.
-            if(action.cleans !== false && action.target.binding){
-                gaffa.model.setDirtyState(action.target.binding, false, action);
-            }
+            // Set the response into the model
+            // and mark a portion of the model
+            // as clean after a successful request.
+            action.target.set(data, action.cleans === false);
 
             scope.data = data;
+
+            action.emit('success', {
+                domEvent: event,
+                scope: scope,
+                data: data
+            });
 
             action.triggerActions('success', scope, event);
 
@@ -65,6 +85,10 @@ Ajax.prototype.trigger = function(parent, scope, event){
         },
         error: errorHandler,
         complete:function(){
+            action.emit('complete', {
+                domEvent: event,
+                scope: scope
+            });
             action.triggerActions('complete', scope, event);
             gaffa.notifications.notify("ajax.complete." + action.kind);
         }
@@ -84,7 +108,9 @@ Ajax.prototype.trigger = function(parent, scope, event){
 };
 Ajax.prototype.target = new Gaffa.Property();
 Ajax.prototype.source = new Gaffa.Property();
+Ajax.prototype.errors = new Gaffa.Property();
 Ajax.prototype.dirty = new Gaffa.Property();
+Ajax.prototype.headers = new Gaffa.Property();
 Ajax.prototype.url = new Gaffa.Property();
 
 module.exports = Ajax;
