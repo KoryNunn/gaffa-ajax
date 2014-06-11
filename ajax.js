@@ -33,10 +33,7 @@ Ajax.prototype.trigger = function(parent, scope, event){
                 });
             }
             action.triggerActions('error', scope, event);
-            gaffa.notifications.notify("ajax.error." + action.kind, error);
         };
-
-    gaffa.notifications.notify("ajax.begin." + action.kind);
 
     if(action.dataType === 'formData'){
         var formData = new FormData();
@@ -80,8 +77,6 @@ Ajax.prototype.trigger = function(parent, scope, event){
             });
 
             action.triggerActions('success', scope, event);
-
-            gaffa.notifications.notify("ajax.success." + action.kind);
         },
         error: errorHandler,
         complete:function(){
@@ -90,7 +85,6 @@ Ajax.prototype.trigger = function(parent, scope, event){
                 scope: scope
             });
             action.triggerActions('complete', scope, event);
-            gaffa.notifications.notify("ajax.complete." + action.kind);
         }
     };
 
